@@ -1,0 +1,17 @@
+syntax = "proto3";
+package test;
+
+service TestService {
+  rpc Stream(stream Frame) returns (stream Frame);
+  rpc Echo(MsgEcho) returns (MsgEcho);
+}
+
+message Frame {
+  oneof Msg {
+    MsgEcho Echo = 1;
+    MsgPing ping = 2;
+  }
+}
+
+message MsgEcho { string Data = 1; }
+message MsgPing {}
