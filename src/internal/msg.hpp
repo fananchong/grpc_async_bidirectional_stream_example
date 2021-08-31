@@ -31,13 +31,12 @@ template <class T>
 class NotifyMsg : public IMsg
 {
 public:
-    NotifyMsg(T *obj) : obj_(obj) { gtags.Set(this); }
+    NotifyMsg(T *obj) : obj_(obj) {}
     void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq) override {}
     void Proceed() override
     {
-        obj_->Release();
         gtags.Release(obj_);
-        gtags.Release(this);
+        delete this;
     }
 
 private:
@@ -130,8 +129,7 @@ protected:
             PRINT_CONSTRUCTOR(MSG);                                                \
             if (server != nullptr)                                                 \
             {                                                                      \
-                auto notify_msg = new NotifyMsg<MSG>(this);                        \
-                ctx_.AsyncNotifyWhenDone((void *)(notify_msg->ID()));              \
+                ctx_.AsyncNotifyWhenDone(new NotifyMsg<MSG>(this));                \
                 Proceed();                                                         \
             }                                                                      \
         }                                                                          \

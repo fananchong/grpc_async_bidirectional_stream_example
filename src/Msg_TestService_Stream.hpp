@@ -16,7 +16,7 @@ STREAM_MESSAGE(
 void Msg_TestService_Stream::OnCreate()
 {
     DEBUG("Create Stream, id={}", id_);
-    service_->RequestStream(&ctx_, &stream_, cq_, cq_, (void *)(ID()));
+    service_->RequestStream(&ctx_, &stream_, cq_, cq_, this);
 }
 
 void Msg_TestService_Stream::OnProcess()
@@ -25,9 +25,9 @@ void Msg_TestService_Stream::OnProcess()
     {
     case test::Frame::kEcho:
     {
-        INFO("{}", request_.echo().data());
         auto v = reply_.mutable_echo();
         v->set_data(request_.echo().data());
+        // CloseStream();
     }
     break;
     }

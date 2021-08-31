@@ -14,7 +14,7 @@ StreamBase<T, Service, Replay, Request>::~StreamBase()
 template <class T, class Service, class Replay, class Request>
 void StreamBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq)
 {
-    gtags.Set(new T(service_, server, cq));
+    new T(service_, server, cq);
 }
 
 template <class T, class Service, class Replay, class Request>
@@ -102,7 +102,7 @@ void UnitaryBase<T, Service, Replay, Request>::Proceed()
         break;
     default:
         GPR_ASSERT(status_ == FINISH);
-        gtags.Release((T *)this);
+        delete (T *)this;
         break;
     }
 }

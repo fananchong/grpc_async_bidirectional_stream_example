@@ -1,27 +1,31 @@
 #include "tag.hpp"
 #include "msg.hpp"
-
-void Tag::Set(IMsg *v)
-{
-    objs_[v->ID()] = v;
-}
-
-IMsg *Tag::Get(int64_t id)
-{
-    auto it = objs_.find(id);
-    if (it != objs_.end())
-    {
-        return it->second;
-    }
-    return nullptr;
-}
+#include "util.hpp"
 
 void Tag::Release(IMsg *v)
 {
-    auto it = objs_.find(v->ID());
-    if (it != objs_.end())
+    v->Release();
+    delays_.push_back({v, get_current_time_nanos()});
+}
+
+void Tag::DelayDel()
+{
+    if (delays_.size() == 0)
     {
-        delete it->second;
-        objs_.erase(it);
+        return;
+    }
+    auto now = get_current_time_nanos();
+    while (delays_.size() != 0)
+    {
+        auto &v = delays_.front();
+        if ((now - v.time_) / 1000 / 1000 / 1000 > 60)
+        {
+            delete v.obj;
+            delays_.pop_front();
+        }
+        else
+        {
+            break;
+        }
     }
 }

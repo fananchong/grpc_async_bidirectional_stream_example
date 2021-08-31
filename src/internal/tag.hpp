@@ -1,6 +1,8 @@
 #pragma once
 
-#include <unordered_map>
+#include <list>
+#include <stdint.h>
+#include <cinttypes>
 
 class IMsg;
 
@@ -10,10 +12,14 @@ public:
     Tag() {}
     ~Tag() {}
 
-    void Set(IMsg *v);
-    IMsg *Get(int64_t id);
     void Release(IMsg *v);
+    void DelayDel();
 
 private:
-    std::unordered_map<int64_t, IMsg *> objs_;
+    struct delayDelItem
+    {
+        IMsg *obj;
+        int64_t time_;
+    };
+    std::list<delayDelItem> delays_;
 };

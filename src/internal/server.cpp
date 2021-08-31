@@ -1,16 +1,8 @@
-#include <iostream>
-#include <memory>
-#include <string>
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <unordered_map>
-#include <grpc/support/log.h>
-#include <grpcpp/grpcpp.h>
-#include <spdlog/fmt/fmt.h>
 #include "log.hpp"
 #include "server.hpp"
 #include "util.hpp"
+#include <grpcpp/grpcpp.h>
+#include <spdlog/fmt/fmt.h>
 
 using grpc::Server;
 using grpc::ServerAsyncReaderWriter;
@@ -66,17 +58,20 @@ void ServerImpl::HandleRpcs()
         msg->Accpet(this, cq_.get());
     }
     void *tag;
-    bool ok, next;
-    do
+    bool ok;
+    grpc::CompletionQueue::NextStatus next(grpc::CompletionQueue::GOT_EVENT);
+    while (next != grpc::CompletionQueue::SHUTDOWN)
     {
-        next = cq_->Next(&tag, &ok);
-        if (next && ok)
+        do
         {
-            if (auto v = gtags.Get(int64_t(tag)))
+            auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(50);
+            next = cq_->AsyncNext(&tag, &ok, deadline);
+            if (next == grpc::CompletionQueue::GOT_EVENT && ok)
             {
-                v->Proceed();
+                ((IMsg *)tag)->Proceed();
             }
-        }
-    } while (next);
+        } while (next == grpc::CompletionQueue::GOT_EVENT);
+        gtags.DelayDel();
+    }
     INFO("HandleRpcs exit.");
 }

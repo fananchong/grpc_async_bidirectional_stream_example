@@ -47,11 +47,11 @@ func (s *session) update() {
 			}
 		}
 
-		if rand.Int31n(100) <= 10 {
-			currentClientFlag[s.index] = 1
-			s.stream.CloseSend()
-			return
-		}
+		// if rand.Int31n(100) <= 10 {
+		// 	currentClientFlag[s.index] = 1
+		// 	s.stream.CloseSend()
+		// 	return
+		// }
 
 	}
 }
@@ -72,7 +72,7 @@ func main() {
 		m[i] = struct{}{}
 	}
 
-LABEL:
+	// LABEL:
 	for i := range m {
 		c := test.NewTestServiceClient(conn)
 		stream, err := c.Stream(context.Background())
@@ -88,16 +88,16 @@ LABEL:
 	}
 
 	for {
-		m = map[int]struct{}{}
-		for i := 0; i < *clientNum; i++ {
-			if currentClientFlag[i] != 0 {
-				currentClientFlag[i] = 0
-				m[i] = struct{}{}
-			}
-		}
-		if len(m) > 0 {
-			goto LABEL
-		}
+		// 	m = map[int]struct{}{}
+		// 	for i := 0; i < *clientNum; i++ {
+		// 		if currentClientFlag[i] != 0 {
+		// 			currentClientFlag[i] = 0
+		// 			m[i] = struct{}{}
+		// 		}
+		// 	}
+		// 	if len(m) > 0 {
+		// 		goto LABEL
+		// 	}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
