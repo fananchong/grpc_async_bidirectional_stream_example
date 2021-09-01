@@ -81,7 +81,7 @@ UnitaryBase<T, Service, Replay, Request>::~UnitaryBase()
 template <class T, class Service, class Replay, class Request>
 void UnitaryBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq)
 {
-    gtags.Set(new T(service_, server, cq));
+    new T(service_, server, cq);
 }
 
 template <class T, class Service, class Replay, class Request>
