@@ -1,6 +1,7 @@
 #include "internal/server.hpp"
 #include "internal/cmdline.h"
 #include "Msg_TestService_Stream.hpp"
+#include <thread>
 
 int main(int argc, char **argv)
 {
@@ -11,7 +12,7 @@ int main(int argc, char **argv)
     auto service = new test::TestService::AsyncService();
     gserver.RegisterService(service);
     gserver.RegisterMsg(new Msg_TestService_Stream(service));
-    gserver.Run("0.0.0.0", args.get<std::string>("port"));
+    gserver.Run(std::thread::hardware_concurrency(), "0.0.0.0", args.get<std::string>("port"));
     gserver.Stop();
     return 0;
 }

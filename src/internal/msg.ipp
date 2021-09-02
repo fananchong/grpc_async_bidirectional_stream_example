@@ -1,8 +1,8 @@
 #include "log.hpp"
 
 template <class T, class Service, class Replay, class Request>
-StreamBase<T, Service, Replay, Request>::StreamBase(Service *service, ServerImpl *server, grpc::ServerCompletionQueue *cq)
-    : service_(service), server_(server), cq_(cq), stream_(&ctx_), status_(CREATE), closed_(false)
+StreamBase<T, Service, Replay, Request>::StreamBase(Service *service, ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags)
+    : service_(service), server_(server), cq_(cq), stream_(&ctx_), status_(CREATE), closed_(false), tags_(tags)
 {
 }
 
@@ -12,9 +12,9 @@ StreamBase<T, Service, Replay, Request>::~StreamBase()
 }
 
 template <class T, class Service, class Replay, class Request>
-void StreamBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq)
+void StreamBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags)
 {
-    new T(service_, server, cq);
+    new T(service_, server, cq, tags);
 }
 
 template <class T, class Service, class Replay, class Request>
@@ -27,7 +27,7 @@ void StreamBase<T, Service, Replay, Request>::Proceed()
         OnCreate();
         break;
     case INIT_READ:
-        Accpet(server_, cq_);
+        Accpet(server_, cq_, tags_);
     case READ:
         reply_.Clear();
         stream_.Read(&request_, (T *)this);
@@ -79,7 +79,7 @@ UnitaryBase<T, Service, Replay, Request>::~UnitaryBase()
 }
 
 template <class T, class Service, class Replay, class Request>
-void UnitaryBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq)
+void UnitaryBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags)
 {
     new T(service_, server, cq);
 }
@@ -95,7 +95,7 @@ void UnitaryBase<T, Service, Replay, Request>::Proceed()
         OnCreate();
         break;
     case PROCESS:
-        Accpet(server_, cq_);
+        Accpet(server_, cq_, tags_);
         ret = OnProcess();
         status_ = FINISH;
         responder_.Finish(reply_, ret, (T *)this);

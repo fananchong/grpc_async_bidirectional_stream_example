@@ -11,7 +11,7 @@
 class ServerImpl;
 
 extern std::atomic<int64_t> gid;
-extern Tag gtags;
+
 class IMsg
 {
 public:
@@ -19,7 +19,7 @@ public:
     virtual ~IMsg() {}
     int64_t ID() { return id_; };
 
-    virtual void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq) = 0;
+    virtual void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags) = 0;
     virtual void Proceed() = 0;
     virtual void Release() {}
 
@@ -31,16 +31,17 @@ template <class T>
 class NotifyMsg : public IMsg
 {
 public:
-    NotifyMsg(T *obj) : obj_(obj) {}
-    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq) override {}
+    NotifyMsg(T *obj, Tag *tags) : obj_(obj), tags_(tags) {}
+    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags) override {}
     void Proceed() override
     {
-        gtags.Release(obj_);
+        tags_->Release(obj_);
         delete this;
     }
 
 private:
     T *obj_;
+    Tag *tags_;
 };
 
 // StreamBase 双向流消息基类
@@ -48,9 +49,9 @@ template <class T, class Service, class Replay, class Request>
 class StreamBase : public IMsg
 {
 public:
-    StreamBase(Service *service, ServerImpl *server, grpc::ServerCompletionQueue *cq);
+    StreamBase(Service *service, ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags);
     virtual ~StreamBase();
-    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq) override;
+    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags) override;
     void Proceed() override;
     void Release() override;
     // bool IsCancelled() { return ctx_.IsCancelled(); }
@@ -82,6 +83,7 @@ protected:
         CLOSED,
     };
     CallStatus status_;
+    Tag *tags_;
     bool closed_;
 };
 
@@ -92,7 +94,7 @@ class UnitaryBase : public IMsg
 public:
     UnitaryBase(Service *service, ServerImpl *server, grpc::ServerCompletionQueue *cq);
     virtual ~UnitaryBase();
-    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq) override;
+    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags) override;
     void Proceed() override;
 
     // 子类实现
@@ -116,31 +118,31 @@ protected:
     CallStatus status_;
 };
 
-#define STREAM_MESSAGE(MSG, SERVICE, ACK, REQ, ...)                                \
-    class MSG                                                                      \
-        : public StreamBase<MSG, SERVICE, ACK, REQ>                                \
-    {                                                                              \
-    public:                                                                        \
-        MSG(SERVICE *service)                                                      \
-            : StreamBase<MSG, SERVICE, ACK, REQ>(service, nullptr, nullptr) {}     \
-        MSG(SERVICE *service, ServerImpl *server, grpc::ServerCompletionQueue *cq) \
-            : StreamBase<MSG, SERVICE, ACK, REQ>(service, server, cq)              \
-        {                                                                          \
-            PRINT_CONSTRUCTOR(MSG);                                                \
-            if (server != nullptr)                                                 \
-            {                                                                      \
-                ctx_.AsyncNotifyWhenDone(new NotifyMsg<MSG>(this));                \
-                Proceed();                                                         \
-            }                                                                      \
-        }                                                                          \
-        virtual ~MSG()                                                             \
-        {                                                                          \
-            PRINT_DESTRUCTOR(MSG);                                                 \
-        }                                                                          \
-        virtual void OnCreate() override;                                          \
-        virtual void OnProcess() override;                                         \
-        virtual void OnExit() override;                                            \
-        __VA_ARGS__;                                                               \
+#define STREAM_MESSAGE(MSG, SERVICE, ACK, REQ, ...)                                           \
+    class MSG                                                                                 \
+        : public StreamBase<MSG, SERVICE, ACK, REQ>                                           \
+    {                                                                                         \
+    public:                                                                                   \
+        MSG(SERVICE *service)                                                                 \
+            : StreamBase<MSG, SERVICE, ACK, REQ>(service, nullptr, nullptr, nullptr) {}       \
+        MSG(SERVICE *service, ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags) \
+            : StreamBase<MSG, SERVICE, ACK, REQ>(service, server, cq, tags)                   \
+        {                                                                                     \
+            PRINT_CONSTRUCTOR(MSG);                                                           \
+            if (server != nullptr)                                                            \
+            {                                                                                 \
+                ctx_.AsyncNotifyWhenDone(new NotifyMsg<MSG>(this, this->tags_));              \
+                Proceed();                                                                    \
+            }                                                                                 \
+        }                                                                                     \
+        virtual ~MSG()                                                                        \
+        {                                                                                     \
+            PRINT_DESTRUCTOR(MSG);                                                            \
+        }                                                                                     \
+        virtual void OnCreate() override;                                                     \
+        virtual void OnProcess() override;                                                    \
+        virtual void OnExit() override;                                                       \
+        __VA_ARGS__;                                                                          \
     }
 
 #define UNITARY_MESSAGE(MSG, SERVICE, ACK, REQ)                                    \

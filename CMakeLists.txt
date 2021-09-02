@@ -75,6 +75,7 @@ set (LIB_GRPC grpc++_reflection
 )
 
 file(GLOB_RECURSE SRC_FILES src/*.c src/*.cc src/*.cpp src/*.h src/*.hpp src/*.ipp)
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${SRC_FILES})
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /MP")
