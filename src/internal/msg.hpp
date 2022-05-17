@@ -94,7 +94,7 @@ class UnitaryBase : public IMsg
 public:
     UnitaryBase(Service *service, ServerImpl *server, grpc::ServerCompletionQueue *cq);
     virtual ~UnitaryBase();
-    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags) override;
+    void Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *_) override;
     void Proceed() override;
 
     // 子类实现

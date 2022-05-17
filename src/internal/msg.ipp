@@ -79,7 +79,7 @@ UnitaryBase<T, Service, Replay, Request>::~UnitaryBase()
 }
 
 template <class T, class Service, class Replay, class Request>
-void UnitaryBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *tags)
+void UnitaryBase<T, Service, Replay, Request>::Accpet(ServerImpl *server, grpc::ServerCompletionQueue *cq, Tag *_)
 {
     new T(service_, server, cq);
 }
@@ -95,7 +95,7 @@ void UnitaryBase<T, Service, Replay, Request>::Proceed()
         OnCreate();
         break;
     case PROCESS:
-        Accpet(server_, cq_, tags_);
+        Accpet(server_, cq_, nullptr);
         ret = OnProcess();
         status_ = FINISH;
         responder_.Finish(reply_, ret, (T *)this);

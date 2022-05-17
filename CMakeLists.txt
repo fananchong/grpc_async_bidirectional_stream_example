@@ -22,25 +22,21 @@ message("-- BUILD: ${CMAKE_BUILD_TYPE}")
 
 include_directories("./src")
 include_directories("./dep/grpc/include")
+include_directories("./dep/openssl/include")
 include_directories("./dep/absl/include")
 include_directories("./dep/spdlog/include")
 link_directories("./dep/grpc/lib")
+link_directories("./dep/grpc/lib64/")
 link_directories("./dep/openssl/lib")
 
-set(LIB_PROTOBUF libprotobufd)
-if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    set(LIB_PROTOBUF libprotobuf)
-endif()
+
 set (LIB_GRPC grpc++_reflection
     grpc++
     grpc
     gpr
+    protobuf
     upb
     cares
-    libcrypto
-    ${LIB_PROTOBUF}
-    libssl
-    zlibstatic
     re2
     absl_bad_optional_access
     absl_bad_variant_access
@@ -86,6 +82,6 @@ ELSE ()
         add_compile_options(-O3)
     endif()
     set(CMAKE_EXE_LINKER_FLAGS "-static")
-    target_link_libraries(${PROJECT_NAME} -Wl,--start-group ${LIB_GRPC} pthread dl stdc++ c m -Wl,--end-group)
+    target_link_libraries(${PROJECT_NAME} -Wl,--start-group ${LIB_GRPC} ssl crypto pthread dl stdc++ c m -Wl,--end-group)
 ENDIF ()
 install(TARGETS ${PROJECT_NAME} DESTINATION .)

@@ -3,6 +3,7 @@
 #include "util.hpp"
 #include <grpcpp/grpcpp.h>
 #include <spdlog/fmt/fmt.h>
+#include <thread>
 
 using grpc::Server;
 using grpc::ServerAsyncReaderWriter;
