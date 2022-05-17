@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_spinlock_wait
+Description: Abseil spinlock_wait library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_base_internal = 20210324, absl_core_headers = 20210324, absl_errno_saver = 20210324
+Libs: -L${libdir}  -labsl_spinlock_wait
+Cflags: -I${includedir} -DNOMINMAX

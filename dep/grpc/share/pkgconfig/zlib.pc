@@ -1,0 +1,13 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=/tmp1/grpc/my_build_out
+libdir=/tmp1/grpc/my_build_out/lib
+sharedlibdir=/tmp1/grpc/my_build_out/lib
+includedir=/tmp1/grpc/my_build_out/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.11
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}

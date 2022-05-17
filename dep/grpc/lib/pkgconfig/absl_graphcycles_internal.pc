@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_graphcycles_internal
+Description: Abseil graphcycles_internal library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_base = 20210324, absl_base_internal = 20210324, absl_config = 20210324, absl_core_headers = 20210324, absl_malloc_internal = 20210324, absl_raw_logging_internal = 20210324
+Libs: -L${libdir}  -labsl_graphcycles_internal
+Cflags: -I${includedir} -DNOMINMAX

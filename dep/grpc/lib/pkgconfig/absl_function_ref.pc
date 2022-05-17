@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_function_ref
+Description: Abseil function_ref library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_base_internal = 20210324, absl_meta = 20210324
+Libs: -L${libdir}  
+Cflags: -I${includedir} -DNOMINMAX

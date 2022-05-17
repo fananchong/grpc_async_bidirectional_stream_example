@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_algorithm
+Description: Abseil algorithm library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_config = 20210324
+Libs: -L${libdir}  
+Cflags: -I${includedir} -DNOMINMAX

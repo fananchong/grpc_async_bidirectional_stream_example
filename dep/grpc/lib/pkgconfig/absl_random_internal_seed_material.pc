@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_random_internal_seed_material
+Description: Abseil random_internal_seed_material library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_core_headers = 20210324, absl_optional = 20210324, absl_random_internal_fast_uniform_bits = 20210324, absl_raw_logging_internal = 20210324, absl_span = 20210324, absl_strings = 20210324
+Libs: -L${libdir}  -labsl_random_internal_seed_material
+Cflags: -I${includedir} -DNOMINMAX

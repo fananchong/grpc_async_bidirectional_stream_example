@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_flags_config
+Description: Abseil flags_config library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_config = 20210324, absl_flags_path_util = 20210324, absl_flags_program_name = 20210324, absl_core_headers = 20210324, absl_strings = 20210324, absl_synchronization = 20210324
+Libs: -L${libdir}  -labsl_flags_config
+Cflags: -I${includedir} -DNOMINMAX

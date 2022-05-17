@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_bad_variant_access
+Description: Abseil bad_variant_access library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_config = 20210324, absl_raw_logging_internal = 20210324
+Libs: -L${libdir}  -labsl_bad_variant_access
+Cflags: -I${includedir} -DNOMINMAX

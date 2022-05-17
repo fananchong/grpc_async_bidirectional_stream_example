@@ -1,0 +1,12 @@
+prefix=/tmp1/grpc/my_build_out
+exec_prefix=${prefix}
+libdir=${prefix}/lib64
+includedir=${prefix}/include
+
+Name: absl_hashtablez_sampler
+Description: Abseil hashtablez_sampler library
+URL: https://abseil.io/
+Version: 20210324
+Requires: absl_base = 20210324, absl_exponential_biased = 20210324, absl_have_sse = 20210324, absl_synchronization = 20210324
+Libs: -L${libdir}  -labsl_hashtablez_sampler
+Cflags: -I${includedir} -DNOMINMAX
