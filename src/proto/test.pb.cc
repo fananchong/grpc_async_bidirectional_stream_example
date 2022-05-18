@@ -94,13 +94,15 @@ const char descriptor_table_protodef_test_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "\n\ntest.proto\022\004test\"L\n\005Frame\022\035\n\004Echo\030\001 \001("
   "\0132\r.test.MsgEchoH\000\022\035\n\004ping\030\002 \001(\0132\r.test."
   "MsgPingH\000B\005\n\003Msg\"\027\n\007MsgEcho\022\014\n\004Data\030\001 \001("
-  "\t\"\t\n\007MsgPing2[\n\013TestService\022&\n\006Stream\022\013."
-  "test.Frame\032\013.test.Frame(\0010\001\022$\n\004Echo\022\r.te"
-  "st.MsgEcho\032\r.test.MsgEchob\006proto3"
+  "\t\"\t\n\007MsgPing2\204\001\n\013TestService\022&\n\006Stream\022\013"
+  ".test.Frame\032\013.test.Frame(\0010\001\022\'\n\007Stream2\022"
+  "\013.test.Frame\032\013.test.Frame(\0010\001\022$\n\004Echo\022\r."
+  "test.MsgEcho\032\r.test.MsgEchoB\010Z\006./testb\006p"
+  "roto3"
   ;
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_test_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_test_2eproto = {
-  false, false, 233, descriptor_table_protodef_test_2eproto, "test.proto", 
+  false, false, 285, descriptor_table_protodef_test_2eproto, "test.proto", 
   &descriptor_table_test_2eproto_once, nullptr, 0, 3,
   schemas, file_default_instances, TableStruct_test_2eproto::offsets,
   file_level_metadata_test_2eproto, file_level_enum_descriptors_test_2eproto, file_level_service_descriptors_test_2eproto,

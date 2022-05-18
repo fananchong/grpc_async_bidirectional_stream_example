@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 #include <grpcpp/grpcpp.h>
-#include "msg.hpp"
+
+class IMsg;
 
 class ServerImpl final
 {

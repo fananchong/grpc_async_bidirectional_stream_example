@@ -19,8 +19,9 @@ void Msg_TestService_Stream::OnCreate()
     service_->RequestStream(&ctx_, &stream_, cq_, cq_, this);
 }
 
-void Msg_TestService_Stream::OnProcess()
+bool Msg_TestService_Stream::OnProcess()
 {
+    INFO("Msg_TestService_Stream::OnProcess");
     switch (request_.Msg_case())
     {
     case test::Frame::kEcho:
@@ -30,10 +31,19 @@ void Msg_TestService_Stream::OnProcess()
         // CloseStream();
     }
     break;
+    case test::Frame::kPing:
+        break;
+    default:
+        break;
     }
+    return true;
+}
+
+void Msg_TestService_Stream::OnTrigger()
+{
 }
 
 void Msg_TestService_Stream::OnExit()
 {
-    INFO("Close Steam, id={}", id_);
+    DEBUG("Close Steam, id={}", id_);
 }

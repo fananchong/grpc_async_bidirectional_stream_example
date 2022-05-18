@@ -23,6 +23,7 @@ namespace test {
 
 static const char* TestService_method_names[] = {
   "/test.TestService/Stream",
+  "/test.TestService/Stream2",
   "/test.TestService/Echo",
 };
 
@@ -34,7 +35,8 @@ std::unique_ptr< TestService::Stub> TestService::NewStub(const std::shared_ptr< 
 
 TestService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
   : channel_(channel), rpcmethod_Stream_(TestService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
-  , rpcmethod_Echo_(TestService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Stream2_(TestService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+  , rpcmethod_Echo_(TestService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::ClientReaderWriter< ::test::Frame, ::test::Frame>* TestService::Stub::StreamRaw(::grpc::ClientContext* context) {
@@ -51,6 +53,22 @@ void TestService::Stub::async::Stream(::grpc::ClientContext* context, ::grpc::Cl
 
 ::grpc::ClientAsyncReaderWriter< ::test::Frame, ::test::Frame>* TestService::Stub::PrepareAsyncStreamRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
   return ::grpc::internal::ClientAsyncReaderWriterFactory< ::test::Frame, ::test::Frame>::Create(channel_.get(), cq, rpcmethod_Stream_, context, false, nullptr);
+}
+
+::grpc::ClientReaderWriter< ::test::Frame, ::test::Frame>* TestService::Stub::Stream2Raw(::grpc::ClientContext* context) {
+  return ::grpc::internal::ClientReaderWriterFactory< ::test::Frame, ::test::Frame>::Create(channel_.get(), rpcmethod_Stream2_, context);
+}
+
+void TestService::Stub::async::Stream2(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::test::Frame,::test::Frame>* reactor) {
+  ::grpc::internal::ClientCallbackReaderWriterFactory< ::test::Frame,::test::Frame>::Create(stub_->channel_.get(), stub_->rpcmethod_Stream2_, context, reactor);
+}
+
+::grpc::ClientAsyncReaderWriter< ::test::Frame, ::test::Frame>* TestService::Stub::AsyncStream2Raw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::test::Frame, ::test::Frame>::Create(channel_.get(), cq, rpcmethod_Stream2_, context, true, tag);
+}
+
+::grpc::ClientAsyncReaderWriter< ::test::Frame, ::test::Frame>* TestService::Stub::PrepareAsyncStream2Raw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::test::Frame, ::test::Frame>::Create(channel_.get(), cq, rpcmethod_Stream2_, context, false, nullptr);
 }
 
 ::grpc::Status TestService::Stub::Echo(::grpc::ClientContext* context, const ::test::MsgEcho& request, ::test::MsgEcho* response) {
@@ -89,6 +107,16 @@ TestService::Service::Service() {
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TestService_method_names[1],
+      ::grpc::internal::RpcMethod::BIDI_STREAMING,
+      new ::grpc::internal::BidiStreamingHandler< TestService::Service, ::test::Frame, ::test::Frame>(
+          [](TestService::Service* service,
+             ::grpc::ServerContext* ctx,
+             ::grpc::ServerReaderWriter<::test::Frame,
+             ::test::Frame>* stream) {
+               return service->Stream2(ctx, stream);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      TestService_method_names[2],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TestService::Service, ::test::MsgEcho, ::test::MsgEcho, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TestService::Service* service,
@@ -103,6 +131,12 @@ TestService::Service::~Service() {
 }
 
 ::grpc::Status TestService::Service::Stream(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::test::Frame, ::test::Frame>* stream) {
+  (void) context;
+  (void) stream;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status TestService::Service::Stream2(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::test::Frame, ::test::Frame>* stream) {
   (void) context;
   (void) stream;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");

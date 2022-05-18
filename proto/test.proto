@@ -1,8 +1,10 @@
 syntax = "proto3";
 package test;
+option go_package = "./test";
 
 service TestService {
   rpc Stream(stream Frame) returns (stream Frame);
+  rpc Stream2(stream Frame) returns (stream Frame);
   rpc Echo(MsgEcho) returns (MsgEcho);
 }
 

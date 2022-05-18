@@ -6,17 +6,13 @@
 
 #define FMTI64 PRId64
 
-#define PRINT_CONSTRUCTOR(CLASS)         \
-    if (server_ != nullptr)              \
-    {                                    \
-        DEBUG("{}, id={}", #CLASS, id_); \
-    }
+#define PRINT_CONSTRUCTOR(CLASS) \
+    assert(context_ != nullptr); \
+    DEBUG("{}, id={}", #CLASS, id_);
 
-#define PRINT_DESTRUCTOR(CLASS)           \
-    if (server_ != nullptr)               \
-    {                                     \
-        DEBUG("~{}, id={}", #CLASS, id_); \
-    }
+#define PRINT_DESTRUCTOR(CLASS)  \
+    assert(context_ != nullptr); \
+    DEBUG("~{}, id={}", #CLASS, id_);
 
 inline int64_t get_current_time_nanos()
 {
