@@ -34,7 +34,7 @@ nmake install
 编译过程：
 
 ```bat
-git clone -b v1.38.0 https://github.com/grpc/grpc.git
+git clone -b v1.41.0 https://github.com/grpc/grpc.git
 cd grpc
 git submodule update --init
 mkdir my_build_out

@@ -34,7 +34,6 @@ set (LIB_GRPC grpc++_reflection
     grpc++
     grpc
     gpr
-    protobuf
     upb
     cares
     re2
@@ -75,13 +74,13 @@ source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${SRC_FILES})
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /MP")
-    target_link_libraries(${PROJECT_NAME} ${LIB_GRPC} CRYPT32 Winhttp httpapi Ws2_32)
+    target_link_libraries(${PROJECT_NAME} ${LIB_GRPC} libcrypto libprotobufd libssl zlibstaticd CRYPT32 Winhttp httpapi Ws2_32)
 ELSE ()
     add_definitions(-g)
     if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
         add_compile_options(-O3)
     endif()
     set(CMAKE_EXE_LINKER_FLAGS "-static")
-    target_link_libraries(${PROJECT_NAME} -Wl,--start-group ${LIB_GRPC} ssl crypto z pthread dl stdc++ c m -Wl,--end-group)
+    target_link_libraries(${PROJECT_NAME} -Wl,--start-group ${LIB_GRPC} protobuf ssl crypto z pthread dl stdc++ c m -Wl,--end-group)
 ENDIF ()
 install(TARGETS ${PROJECT_NAME} DESTINATION .)
