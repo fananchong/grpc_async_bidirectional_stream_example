@@ -4,6 +4,8 @@ template <class T, class Service, class Replay, class Request>
 StreamBase<T, Service, Replay, Request>::StreamBase(Service *service, HandleRpcsContext *context, grpc::ServerCompletionQueue *cq)
     : IMsg(context), service_(service), cq_(cq), stream_(&ctx_), status_(CREATE), closed_(false)
 {
+    read_swap.reset(new ReadMsg<T>((T *)this));
+    write_swap.reset(new WriteMsg<T>((T *)this));
 }
 
 template <class T, class Service, class Replay, class Request>
@@ -20,7 +22,6 @@ void StreamBase<T, Service, Replay, Request>::NewMsg(HandleRpcsContext *context,
 template <class T, class Service, class Replay, class Request>
 void StreamBase<T, Service, Replay, Request>::Proceed()
 {
-    oping_ = 0;
     switch (status_)
     {
     case CREATE:
@@ -30,18 +31,19 @@ void StreamBase<T, Service, Replay, Request>::Proceed()
     case INIT_READ:
         NewMsg(context_, cq_);
         context_->streams_.insert((T *)this);
-    case READ:
-        OpRead();
+    case OP:
+        OpOne();
         break;
     case PROCESS:
         reply_.Clear();
         if (OnProcess())
         {
-            SendMsgWithCopy(reply_);
+            SendMsg(reply_);
         }
-        break;
-    case WRITE:
-        OpWrite();
+        else
+        {
+            OpOne();
+        }
         break;
     case FINISH:
         OnExit();
@@ -54,46 +56,27 @@ void StreamBase<T, Service, Replay, Request>::Proceed()
 }
 
 template <class T, class Service, class Replay, class Request>
-void StreamBase<T, Service, Replay, Request>::SendMsg(const Replay &msg, bool isLastMsg)
+void StreamBase<T, Service, Replay, Request>::SendMsg(const Replay &msg)
 {
     if (oping_ == 0)
     {
         if (write_list_.size() == 0)
         {
-            OpWrite(msg, isLastMsg);
+            OpWrite(msg);
         }
         else
         {
-            write_list_.push_back(WriteInfo{.Rep = msg, .IsLastMsg = isLastMsg});
-            OpWrite();
+            auto v = std::make_shared<Replay>();
+            v->CopyFrom(msg);
+            write_list_.push_back(v);
+            OpOne();
         }
     }
     else
     {
-        write_list_.push_back(WriteInfo{.Rep = msg, .IsLastMsg = isLastMsg});
-    }
-}
-
-template <class T, class Service, class Replay, class Request>
-void StreamBase<T, Service, Replay, Request>::SendMsgWithCopy(const Replay &msg, bool isLastMsg)
-{
-    if (oping_ == 0)
-    {
-        if (write_list_.size() == 0)
-        {
-            OpWrite(msg, isLastMsg);
-        }
-        else
-        {
-            Replay v;
-            v.CopyFrom(msg);
-            write_list_.push_back(WriteInfo{.Rep = msg, .IsLastMsg = isLastMsg});
-            OpWrite();
-        }
-    }
-    else
-    {
-        write_list_.push_back(WriteInfo{.Rep = msg, .IsLastMsg = isLastMsg});
+        auto v = std::make_shared<Replay>();
+        v->CopyFrom(msg);
+        write_list_.push_back(v);
     }
 }
 
@@ -102,33 +85,32 @@ void StreamBase<T, Service, Replay, Request>::OpRead()
 {
     oping_ = 1;
     request_.Clear();
-    stream_.Read(&request_, (T *)this);
-    SetStatus(PROCESS);
+    stream_.Read(&request_, read_swap.get());
 }
 
 template <class T, class Service, class Replay, class Request>
-void StreamBase<T, Service, Replay, Request>::OpWrite(const Replay &rep, bool isLastMsg)
+void StreamBase<T, Service, Replay, Request>::OpWrite(const Replay &rep)
 {
     oping_ = 1;
-    stream_.Write(rep, (T *)this);
-    if (!isLastMsg)
+    stream_.Write(rep, write_swap.get());
+}
+
+template <class T, class Service, class Replay, class Request>
+void StreamBase<T, Service, Replay, Request>::OpOne()
+{
+    if (oping_ == 1)
     {
-        SetStatus(WRITE);
+        return;
+    }
+    if (write_list_.size() != 0)
+    {
+        auto &r = write_list_.front();
+        OpWrite(*r);
+        write_list_.pop_front();
     }
     else
     {
-        SetStatus(READ);
-    }
-}
-
-template <class T, class Service, class Replay, class Request>
-void StreamBase<T, Service, Replay, Request>::OpWrite()
-{
-    if (write_list_.size() > 0)
-    {
-        auto &r = write_list_.front();
-        OpWrite(r.Rep, r.IsLastMsg);
-        write_list_.pop_front();
+        OpRead();
     }
 }
 

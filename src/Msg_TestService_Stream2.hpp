@@ -29,17 +29,17 @@ bool Msg_TestService_Stream2::OnProcess()
         test::Frame rep1;
         auto v1 = rep1.mutable_echo();
         v1->set_data(fmt::format("{} #1", request_.echo().data()));
-        SendMsg(rep1, false);
+        SendMsg(rep1);
 
         test::Frame rep2;
         auto v2 = rep2.mutable_echo();
         v2->set_data(fmt::format("{} #2", request_.echo().data()));
-        SendMsg(rep2, false);
+        SendMsg(rep2);
 
         test::Frame rep3;
         auto v3 = rep3.mutable_echo();
         v3->set_data(fmt::format("{} #3", request_.echo().data()));
-        SendMsg(rep3, true);
+        SendMsg(rep3);
         return false;
     }
     break;

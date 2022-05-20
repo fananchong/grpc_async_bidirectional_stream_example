@@ -50,6 +50,38 @@ private:
     T *obj_;
 };
 
+template <class T>
+class ReadMsg : public IMsg
+{
+public:
+    ReadMsg(T *obj) : obj_(obj) {}
+    void Proceed() override
+    {
+        obj_->oping_ = 0;
+        obj_->SetStatus(T::PROCESS);
+        obj_->Proceed();
+    }
+
+private:
+    T *obj_;
+};
+
+template <class T>
+class WriteMsg : public IMsg
+{
+public:
+    WriteMsg(T *obj) : obj_(obj) {}
+    void Proceed() override
+    {
+        obj_->oping_ = 0;
+        obj_->SetStatus(T::OP);
+        obj_->Proceed();
+    }
+
+private:
+    T *obj_;
+};
+
 // StreamBase 双向流消息基类
 template <class T, class Service, class Replay, class Request>
 class StreamBase : public IMsg
@@ -61,8 +93,7 @@ public:
     void Proceed() override;
     void Release() override;
     bool IsClosed() { return closed_; }
-    void SendMsg(const Replay &msg, bool isLastMsg = true);         // isLastMsg 值为 false , 表示表示还有 N 条消息待发送
-    void SendMsgWithCopy(const Replay &msg, bool isLastMsg = true); // isLastMsg 值为 false , 表示表示还有 N 条消息待发送
+    void SendMsg(const Replay &msg);
 
     // 子类实现
     virtual void OnCreate() = 0;
@@ -85,9 +116,8 @@ public:
     {
         CREATE,
         INIT_READ,
-        READ,
+        OP,
         PROCESS,
-        WRITE,
         FINISH,
         CLOSED,
     };
@@ -96,15 +126,12 @@ public:
 
 protected:
     CallStatus status_;
-    struct WriteInfo
-    {
-        Replay Rep;
-        bool IsLastMsg;
-    };
-    std::list<WriteInfo> write_list_;
+    std::list<std::shared_ptr<Replay>> write_list_;
     void OpRead();
-    void OpWrite(const Replay &rep, bool isLastMsg);
-    void OpWrite();
+    void OpWrite(const Replay &rep);
+    void OpOne();
+    std::unique_ptr<ReadMsg<T>> read_swap;
+    std::unique_ptr<WriteMsg<T>> write_swap;
     bool closed_;
 };
 
