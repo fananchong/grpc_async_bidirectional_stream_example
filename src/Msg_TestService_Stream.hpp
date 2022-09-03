@@ -29,6 +29,7 @@ bool Msg_TestService_Stream::OnProcess()
         auto v = reply_.mutable_echo();
         v->set_data(request_.echo().data());
         // CloseStream();
+        return true;
     }
     break;
     case test::Frame::kPing:
@@ -36,7 +37,7 @@ bool Msg_TestService_Stream::OnProcess()
     default:
         break;
     }
-    return true;
+    return false;
 }
 
 void Msg_TestService_Stream::OnTrigger()

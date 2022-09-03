@@ -57,8 +57,7 @@ public:
     ReadMsg(T *obj) : obj_(obj) {}
     void Proceed() override
     {
-        obj_->oping_ = 0;
-        obj_->SetStatus(T::PROCESS);
+        obj_->SetStatus(T::READ);
         obj_->Proceed();
     }
 
@@ -74,7 +73,7 @@ public:
     void Proceed() override
     {
         obj_->oping_ = 0;
-        obj_->SetStatus(T::OP);
+        obj_->SetStatus(T::WRITE);
         obj_->Proceed();
     }
 
@@ -116,8 +115,8 @@ public:
     {
         CREATE,
         INIT_READ,
-        OP,
-        PROCESS,
+        READ,
+        WRITE,
         FINISH,
         CLOSED,
     };
@@ -128,6 +127,7 @@ protected:
     CallStatus status_;
     std::list<std::shared_ptr<Replay>> write_list_;
     void OpRead();
+    void OpWrite();
     void OpWrite(const Replay &rep);
     void OpOne();
     std::unique_ptr<ReadMsg<T>> read_swap;

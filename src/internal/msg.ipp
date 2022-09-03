@@ -31,24 +31,22 @@ void StreamBase<T, Service, Replay, Request>::Proceed()
     case INIT_READ:
         NewMsg(context_, cq_);
         context_->streams_.insert((T *)this);
-    case OP:
-        OpOne();
-        break;
-    case PROCESS:
+    case READ:
         reply_.Clear();
         if (OnProcess())
         {
             SendMsg(reply_);
         }
-        else
-        {
-            OpOne();
-        }
+        OpRead();
+        break;
+    case WRITE:
+        OpWrite();
         break;
     case FINISH:
         OnExit();
         ctx_.TryCancel();
         status_ = CLOSED;
+        closed_ = true;
         break;
     case CLOSED:
         break;
@@ -69,7 +67,7 @@ void StreamBase<T, Service, Replay, Request>::SendMsg(const Replay &msg)
             auto v = std::make_shared<Replay>();
             v->CopyFrom(msg);
             write_list_.push_back(v);
-            OpOne();
+            OpWrite();
         }
     }
     else
@@ -83,9 +81,20 @@ void StreamBase<T, Service, Replay, Request>::SendMsg(const Replay &msg)
 template <class T, class Service, class Replay, class Request>
 void StreamBase<T, Service, Replay, Request>::OpRead()
 {
-    oping_ = 1;
     request_.Clear();
     stream_.Read(&request_, read_swap.get());
+}
+
+template <class T, class Service, class Replay, class Request>
+void StreamBase<T, Service, Replay, Request>::OpWrite()
+{
+    if (oping_ == 0 && !write_list_.empty())
+    {
+        oping_ = 1;
+        auto &rep = write_list_.front();
+        stream_.Write(*rep, write_swap.get());
+        write_list_.pop_front();
+    }
 }
 
 template <class T, class Service, class Replay, class Request>
@@ -93,25 +102,6 @@ void StreamBase<T, Service, Replay, Request>::OpWrite(const Replay &rep)
 {
     oping_ = 1;
     stream_.Write(rep, write_swap.get());
-}
-
-template <class T, class Service, class Replay, class Request>
-void StreamBase<T, Service, Replay, Request>::OpOne()
-{
-    if (oping_ == 1)
-    {
-        return;
-    }
-    if (write_list_.size() != 0)
-    {
-        auto &r = write_list_.front();
-        OpWrite(*r);
-        write_list_.pop_front();
-    }
-    else
-    {
-        OpRead();
-    }
 }
 
 template <class T, class Service, class Replay, class Request>
@@ -134,6 +124,7 @@ void StreamBase<T, Service, Replay, Request>::Release()
     OnExit();
     stream_.Finish(grpc::Status::CANCELLED, (T *)this);
     status_ = CLOSED;
+    closed_ = true;
 }
 
 template <class T, class Service, class Replay, class Request>

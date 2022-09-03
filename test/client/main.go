@@ -41,7 +41,7 @@ func (s *session) update() {
 			s.stream.RecvMsg(msg)
 			v := msg.GetEcho().GetData()
 			if v != data {
-				panic("data error")
+				panic(fmt.Sprintf("data error, send data: %v, recv data: %v", data, v))
 			} else {
 				fmt.Print(s.index, " ")
 			}

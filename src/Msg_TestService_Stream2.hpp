@@ -48,7 +48,7 @@ bool Msg_TestService_Stream2::OnProcess()
     default:
         break;
     }
-    return true;
+    return false;
 }
 
 void Msg_TestService_Stream2::OnTrigger()
