@@ -33,6 +33,7 @@ func (s *session) update() {
 					},
 				},
 			}
+			fmt.Printf("send msg = %v\n", msg)
 			s.stream.SendMsg(msg)
 		}
 		// recv

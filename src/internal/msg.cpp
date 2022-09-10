@@ -1,3 +1,8 @@
 #include "msg.hpp"
 
-std::atomic<int64_t> gid(0);
+static std::atomic<int64_t> gid(0);
+
+int64_t gen_id()
+{
+    return ++gid;
+}

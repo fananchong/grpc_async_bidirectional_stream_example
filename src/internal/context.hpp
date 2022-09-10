@@ -21,6 +21,6 @@ public:
 public:
     const int64_t INTERVAL_MS = 50; // 把时间轴按固定间隔切分，单位毫秒 milliseconds
     int64_t current_fragment_ = 0;  // 当前时间片段
-    std::set<void *> streams_;      // 当前所有流对象
+    int64_t current_timestamp_ = 0; // 当前时间戳（纳秒）
     std::unique_ptr<Tag> tags_;     // 管理所有 tag 对象，延迟删除
 };

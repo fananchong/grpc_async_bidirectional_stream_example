@@ -19,28 +19,27 @@ void Msg_TestService_Stream2::OnCreate()
     service_->RequestStream2(&ctx_, &stream_, cq_, cq_, this);
 }
 
-bool Msg_TestService_Stream2::OnProcess()
+void Msg_TestService_Stream2::OnProcess()
 {
     INFO("Msg_TestService_Stream2::OnProcess");
-    switch (request_.Msg_case())
+    switch (request_->Msg_case())
     {
     case test::Frame::kEcho:
     {
-        test::Frame rep1;
-        auto v1 = rep1.mutable_echo();
-        v1->set_data(fmt::format("{} #1", request_.echo().data()));
+        auto rep1 = std::make_shared<test::Frame>();
+        auto v1 = rep1->mutable_echo();
+        v1->set_data(fmt::format("{} #1", request_->echo().data()));
         SendMsg(rep1);
 
-        test::Frame rep2;
-        auto v2 = rep2.mutable_echo();
-        v2->set_data(fmt::format("{} #2", request_.echo().data()));
+        auto rep2 = std::make_shared<test::Frame>();
+        auto v2 = rep2->mutable_echo();
+        v2->set_data(fmt::format("{} #2", request_->echo().data()));
         SendMsg(rep2);
 
-        test::Frame rep3;
-        auto v3 = rep3.mutable_echo();
-        v3->set_data(fmt::format("{} #3", request_.echo().data()));
+        auto rep3 = std::make_shared<test::Frame>();
+        auto v3 = rep3->mutable_echo();
+        v3->set_data(fmt::format("{} #3", request_->echo().data()));
         SendMsg(rep3);
-        return false;
     }
     break;
     case test::Frame::kPing:
@@ -48,11 +47,6 @@ bool Msg_TestService_Stream2::OnProcess()
     default:
         break;
     }
-    return false;
-}
-
-void Msg_TestService_Stream2::OnTrigger()
-{
 }
 
 void Msg_TestService_Stream2::OnExit()

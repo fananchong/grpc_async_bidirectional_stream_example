@@ -20,12 +20,9 @@ void HandleRpcsContext::Update(const std::function<int(void)> &fn)
     int64_t interval = INTERVAL_MS * 1000000; // 转为纳秒
     auto fragment2 = t2 / interval;
     current_fragment_ = fragment2;
+    current_timestamp_ = t2;
 }
 
 void HandleRpcsContext::OnTrigger()
 {
-    for (auto v : streams_)
-    {
-        ((IMsg *)v)->OnTrigger();
-    }
 }

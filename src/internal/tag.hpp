@@ -3,6 +3,7 @@
 #include <list>
 #include <stdint.h>
 #include <cinttypes>
+#include <memory>
 
 class IMsg;
 
@@ -12,13 +13,13 @@ public:
     Tag() {}
     ~Tag() {}
 
-    void Release(IMsg *v);
-    void DelayDel();
+    void Release(const std::shared_ptr<IMsg> &v);
+    void DelayDel(int64_t now);
 
 private:
     struct delayDelItem
     {
-        IMsg *obj;
+        std::shared_ptr<IMsg> obj;
         int64_t time_;
     };
     std::list<delayDelItem> delays_;

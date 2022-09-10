@@ -19,17 +19,17 @@ void Msg_TestService_Stream::OnCreate()
     service_->RequestStream(&ctx_, &stream_, cq_, cq_, this);
 }
 
-bool Msg_TestService_Stream::OnProcess()
+void Msg_TestService_Stream::OnProcess()
 {
     INFO("Msg_TestService_Stream::OnProcess");
-    switch (request_.Msg_case())
+    switch (request_->Msg_case())
     {
     case test::Frame::kEcho:
     {
-        auto v = reply_.mutable_echo();
-        v->set_data(request_.echo().data());
+        reply_ = std::make_shared<test::Frame>();
+        auto v = reply_->mutable_echo();
+        v->set_data(request_->echo().data());
         // CloseStream();
-        return true;
     }
     break;
     case test::Frame::kPing:
@@ -37,11 +37,6 @@ bool Msg_TestService_Stream::OnProcess()
     default:
         break;
     }
-    return false;
-}
-
-void Msg_TestService_Stream::OnTrigger()
-{
 }
 
 void Msg_TestService_Stream::OnExit()

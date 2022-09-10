@@ -9,23 +9,24 @@
 #include <functional>
 #include <cassert>
 #include <atomic>
+#include <memory>
+#include <mutex>
 
 class ServerImpl;
 
-extern std::atomic<int64_t> gid;
+int64_t gen_id();
 
 class IMsg
 {
 public:
-    IMsg() : id_(gid++), context_(nullptr) {}
-    IMsg(HandleRpcsContext *context) : id_(gid++), context_(context) {}
+    IMsg() : id_(gen_id()), context_(nullptr) {}
+    IMsg(HandleRpcsContext *context) : id_(gen_id()), context_(context) {}
     virtual ~IMsg() {}
     int64_t ID() { return id_; }
 
     virtual void NewMsg(HandleRpcsContext *context, grpc::ServerCompletionQueue *cq) {}
     virtual void Proceed() {}
     virtual void Release() {}
-    virtual void OnTrigger() {}
 
 protected:
     int64_t id_;
@@ -36,18 +37,17 @@ template <class T>
 class NotifyMsg : public IMsg
 {
 public:
-    NotifyMsg(HandleRpcsContext *context, T *obj) : IMsg(context), obj_(obj)
+    NotifyMsg(HandleRpcsContext *context, const std::shared_ptr<T> &obj) : IMsg(context), obj_(obj)
     {
     }
     void Proceed() override
     {
-        context_->streams_.erase(obj_);
         context_->tags_->Release(obj_);
         delete this;
     }
 
 private:
-    T *obj_;
+    std::shared_ptr<T> obj_;
 };
 
 template <class T>
@@ -57,6 +57,7 @@ public:
     ReadMsg(T *obj) : obj_(obj) {}
     void Proceed() override
     {
+        obj_->oping_r_ = 0;
         obj_->SetStatus(T::READ);
         obj_->Proceed();
     }
@@ -72,7 +73,8 @@ public:
     WriteMsg(T *obj) : obj_(obj) {}
     void Proceed() override
     {
-        obj_->oping_ = 0;
+        std::lock_guard<std::mutex> lck(obj_->m_mutex_);
+        obj_->oping_w_ = 0;
         obj_->SetStatus(T::WRITE);
         obj_->Proceed();
     }
@@ -83,7 +85,7 @@ private:
 
 // StreamBase 双向流消息基类
 template <class T, class Service, class Replay, class Request>
-class StreamBase : public IMsg
+class StreamBase : public IMsg, public std::enable_shared_from_this<T>
 {
 public:
     StreamBase(Service *service, HandleRpcsContext *context, grpc::ServerCompletionQueue *cq);
@@ -92,11 +94,11 @@ public:
     void Proceed() override;
     void Release() override;
     bool IsClosed() { return closed_; }
-    void SendMsg(const Replay &msg);
+    void SendMsg(const std::shared_ptr<Replay> &msg);
 
     // 子类实现
     virtual void OnCreate() = 0;
-    virtual bool OnProcess() = 0;
+    virtual void OnProcess() = 0;
     virtual void OnExit() = 0;
 
     // 关闭流
@@ -106,8 +108,8 @@ protected:
     Service *service_;
     grpc::ServerCompletionQueue *cq_;
     grpc::ServerContext ctx_;
-    Replay reply_;
-    Request request_;
+    std::shared_ptr<Replay> reply_;
+    std::shared_ptr<Request> request_;
     grpc::ServerAsyncReaderWriter<Replay, Request> stream_;
 
 public:
@@ -121,17 +123,21 @@ public:
         CLOSED,
     };
     void SetStatus(CallStatus s);
-    int oping_ = 0;
+    int oping_r_ = 0;
+    int oping_w_ = 0;
+    std::mutex m_mutex_;
 
 protected:
     CallStatus status_;
     std::list<std::shared_ptr<Replay>> write_list_;
     void OpRead();
     void OpWrite();
-    void OpWrite(const Replay &rep);
-    void OpOne();
-    std::unique_ptr<ReadMsg<T>> read_swap;
-    std::unique_ptr<WriteMsg<T>> write_swap;
+    void OpWrite(const std::shared_ptr<Replay> &rep);
+    void OpWriteLock();
+    void OpWriteLock(const std::shared_ptr<Replay> &rep);
+    void OpProcess();
+    std::unique_ptr<ReadMsg<T>> read_swap_;
+    std::unique_ptr<WriteMsg<T>> write_swap_;
     bool closed_;
 };
 
@@ -177,16 +183,13 @@ protected:
         {                                                                                  \
             PRINT_CONSTRUCTOR(MSG);                                                        \
             assert(context != nullptr);                                                    \
-            ctx_.AsyncNotifyWhenDone(new NotifyMsg<MSG>(context, this));                   \
-            Proceed();                                                                     \
         }                                                                                  \
         virtual ~MSG()                                                                     \
         {                                                                                  \
             PRINT_DESTRUCTOR(MSG);                                                         \
         }                                                                                  \
         virtual void OnCreate() override;                                                  \
-        virtual bool OnProcess() override;                                                 \
-        virtual void OnTrigger() override;                                                 \
+        virtual void OnProcess() override;                                                 \
         virtual void OnExit() override;                                                    \
         __VA_ARGS__;                                                                       \
     }

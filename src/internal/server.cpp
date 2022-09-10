@@ -101,7 +101,7 @@ void ServerImpl::HandleRpcs(size_t thread_no)
             context.Update(fn);
         } while (next == grpc::CompletionQueue::GOT_EVENT && pre_fragment == context.current_fragment_);
 
-        context.tags_->DelayDel();
+        context.tags_->DelayDel(context.current_timestamp_);
 
         // 时间片段推进，调用触发器
         if (pre_fragment < context.current_fragment_)
