@@ -170,7 +170,7 @@ UnitaryBase<T, Service, Replay, Request>::~UnitaryBase()
 template <class T, class Service, class Replay, class Request>
 void UnitaryBase<T, Service, Replay, Request>::NewMsg(HandleRpcsContext *context, grpc::ServerCompletionQueue *cq)
 {
-    new T(service_, context_, cq);
+    new T(service_, context, cq);
 }
 
 template <class T, class Service, class Replay, class Request>
