@@ -97,7 +97,6 @@ void StreamBase<T, Service, Replay, Request>::OpRead()
         oping_r_ = 1;
         request_ = std::make_shared<Request>();
         stream_.Read(request_.get(), read_swap_.get());
-        INFO("[stream {}] OpRead", ID());
     }
 }
 

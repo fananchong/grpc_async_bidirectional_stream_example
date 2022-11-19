@@ -91,7 +91,7 @@ void ServerImpl::HandleRpcs(size_t thread_no)
             next = cq->AsyncNext(&tag, &ok, std::chrono::system_clock::now() + std::chrono::milliseconds(10));
             auto fn = [next, ok, &tag]() -> int
             {
-                if (next == grpc::CompletionQueue::GOT_EVENT && ok)
+                if (next == grpc::CompletionQueue::GOT_EVENT)
                 {
                     ((IMsg *)tag)->Proceed();
                     return 1;

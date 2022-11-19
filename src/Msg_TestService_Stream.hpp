@@ -15,7 +15,7 @@ STREAM_MESSAGE(
 
 void Msg_TestService_Stream::OnCreate()
 {
-    DEBUG("Create Stream, id={}", id_);
+    INFO("Create Stream, id={}", id_);
     service_->RequestStream(&ctx_, &stream_, cq_, cq_, this);
 }
 
@@ -41,5 +41,5 @@ void Msg_TestService_Stream::OnProcess()
 
 void Msg_TestService_Stream::OnExit()
 {
-    DEBUG("Close Steam, id={}", id_);
+    INFO("Close Steam, id={}", id_);
 }
