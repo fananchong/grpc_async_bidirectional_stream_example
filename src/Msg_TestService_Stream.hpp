@@ -21,7 +21,7 @@ void Msg_TestService_Stream::OnCreate()
 
 void Msg_TestService_Stream::OnProcess()
 {
-    INFO("Msg_TestService_Stream::OnProcess");
+    // INFO("Msg_TestService_Stream::OnProcess");
     switch (request_->Msg_case())
     {
     case test::Frame::kEcho:

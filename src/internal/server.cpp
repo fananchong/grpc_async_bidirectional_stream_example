@@ -37,6 +37,17 @@ void ServerImpl::RegisterMsg(IMsg *msg)
 void ServerImpl::Run(size_t thread_num, const std::string &ip, const std::string &port)
 {
     std::string server_address(fmt::format("{}:{}", ip, port));
+    auto max_message_size = 128 * 1024 * 1024;
+    auto keepalivetime = 30 * 1000;
+    auto keepalivetimeout = 60 * 1000;
+    INFO("gRPC Max Message Size: {}M", max_message_size / 1024.0f / 1024.0f);
+    INFO("gRPC Keepalive Time: {}s", keepalivetime / 1000.0f);
+    INFO("gRPC Keepalive Timeout: {}s", keepalivetimeout / 1000.0f);
+    builder_->SetMaxMessageSize(max_message_size);
+    builder_->AddChannelArgument(GRPC_ARG_KEEPALIVE_TIME_MS, keepalivetime);
+    builder_->AddChannelArgument(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, keepalivetimeout);
+    builder_->AddChannelArgument(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
+    builder_->AddChannelArgument(GRPC_ARG_HTTP2_MAX_PING_STRIKES, 0);
     builder_->AddListeningPort(server_address, grpc::InsecureServerCredentials());
     for (size_t i = 0; i < thread_num; i++)
     {

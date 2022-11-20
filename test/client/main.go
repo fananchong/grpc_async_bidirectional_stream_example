@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
@@ -24,6 +25,7 @@ type session struct {
 
 func (s *session) update() {
 	for {
+
 		// send
 		{
 			msg := &test.Frame{
@@ -33,16 +35,20 @@ func (s *session) update() {
 					},
 				},
 			}
-			fmt.Printf("send msg = %v\n", msg)
+			// fmt.Printf("send msg = %v\n", msg)
+			fmt.Printf(".")
 			s.stream.SendMsg(msg)
 		}
 		// recv
 		{
 			msg := &test.Frame{}
-			s.stream.RecvMsg(msg)
+			err := s.stream.RecvMsg(msg)
+			if err != nil {
+				panic(err)
+			}
 			v := msg.GetEcho().GetData()
 			if v != data {
-				panic(fmt.Sprintf("data error, send data: %v, recv data: %v", data, v))
+				panic(fmt.Sprintf("data error, send data len: %v, recv data len: %v", len(data), len(v)))
 			} else {
 				fmt.Print(s.index, " ")
 			}
@@ -60,7 +66,13 @@ func (s *session) update() {
 func main() {
 	flag.Parse()
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", *ip, *port), grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", *ip, *port), grpc.WithInsecure(), grpc.WithBlock(),
+		grpc.WithInitialWindowSize(int32(8*1024*1024)),
+		grpc.WithReadBufferSize(4*1024*1024),
+		grpc.WithWriteBufferSize(4*1024*1024),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(128*1024*1024)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(128*1024*1024)),
+	)
 	if err != nil {
 		fmt.Printf("conn server failed, err:%v\n", err)
 		return
@@ -71,6 +83,14 @@ func main() {
 	m := map[int]struct{}{}
 	for i := 0; i < *clientNum; i++ {
 		m[i] = struct{}{}
+	}
+
+	var tmp string
+	for i := 0; i < 10000; i++ {
+		tmp += strconv.Itoa(i)
+	}
+	for i := 0; i < 1000; i++ {
+		data += string(tmp)
 	}
 
 	// LABEL:
