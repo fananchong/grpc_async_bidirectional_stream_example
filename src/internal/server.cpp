@@ -48,6 +48,7 @@ void ServerImpl::Run(size_t thread_num, const std::string &ip, const std::string
     builder_->AddChannelArgument(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, keepalivetimeout);
     builder_->AddChannelArgument(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
     builder_->AddChannelArgument(GRPC_ARG_HTTP2_MAX_PING_STRIKES, 0);
+    builder_->AddChannelArgument(GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA, 0);
     builder_->AddListeningPort(server_address, grpc::InsecureServerCredentials());
     for (size_t i = 0; i < thread_num; i++)
     {
