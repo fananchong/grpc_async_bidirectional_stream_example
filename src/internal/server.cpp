@@ -105,6 +105,14 @@ void ServerImpl::HandleRpcs(size_t thread_no)
             {
                 if (next == grpc::CompletionQueue::GOT_EVENT)
                 {
+                    if (!ok)
+                    {
+                        auto msgtype = ((IMsg *)tag)->GetMsgType();
+                        if (msgtype == MsgTypeRead || msgtype == MsgTypeWrite)
+                        {
+                            ((IMsg *)tag)->Close();
+                        }
+                    }
                     ((IMsg *)tag)->Proceed();
                     return 1;
                 }

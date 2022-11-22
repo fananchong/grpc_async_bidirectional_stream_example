@@ -16,6 +16,16 @@ class ServerImpl;
 
 int64_t gen_id();
 
+enum MsgType
+{
+    MsgTypeUnknow = 0,
+    MsgTypeRead = 1,
+    MsgTypeWrite = 2,
+    MsgTypeNotify = 3,
+    MsgTypeStream = 4,
+    MsgTypeUnitary = 5,
+};
+
 class IMsg
 {
 public:
@@ -27,6 +37,8 @@ public:
     virtual void NewMsg(HandleRpcsContext *context, grpc::ServerCompletionQueue *cq) {}
     virtual void Proceed() {}
     virtual void Release() {}
+    virtual MsgType GetMsgType() { return MsgTypeUnknow; }
+    virtual void Close() {}
 
 protected:
     int64_t id_;
@@ -45,6 +57,7 @@ public:
         context_->tags_->Release(obj_);
         delete this;
     }
+    MsgType GetMsgType() override { return MsgTypeNotify; }
 
 private:
     std::shared_ptr<T> obj_;
@@ -61,6 +74,8 @@ public:
         obj_->SetStatus(T::READ);
         obj_->Proceed();
     }
+    MsgType GetMsgType() override { return MsgTypeRead; }
+    void Close() override { obj_->CloseStream(); }
 
 private:
     T *obj_;
@@ -78,6 +93,8 @@ public:
         obj_->SetStatus(T::WRITE);
         obj_->Proceed();
     }
+    MsgType GetMsgType() override { return MsgTypeWrite; }
+    void Close() override { obj_->CloseStream(); }
 
 private:
     T *obj_;
@@ -95,6 +112,7 @@ public:
     void Release() override;
     bool IsClosed() { return closed_; }
     void SendMsg(const std::shared_ptr<Replay> &msg);
+    MsgType GetMsgType() override { return MsgTypeStream; }
 
     // 子类实现
     virtual void OnCreate() = 0;
@@ -150,6 +168,7 @@ public:
     virtual ~UnitaryBase();
     void NewMsg(HandleRpcsContext *context, grpc::ServerCompletionQueue *cq) override;
     void Proceed() override;
+    MsgType GetMsgType() override { return MsgTypeUnitary; }
 
     // 子类实现
     virtual void OnCreate() = 0;
